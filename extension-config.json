@@ -1,0 +1,69 @@
+{
+  "version": "0.1.0",
+  "id": "@shopgate-project/dynamic-yield",
+  "components": [
+    
+  ],
+  "configuration": {
+    "apiKey": {
+      "type": "admin",
+      "destination": "backend",
+      "default": "f7698679a2c9bc566fbdfd366cd13fec89d3612588061156c70804189ddfe09b",
+      "params": {
+        "type": "text",
+        "label": "Dynamic Yield API Key",
+        "required": true
+      }
+    },
+    "apiZone": {
+      "type": "admin",
+      "destination": "backend",
+      "default": "com",
+      "params": {
+        "type": "select",
+        "label": "Dynamic Yield API Zone",
+        "required": true,
+        "options": {
+          "multiple": false,
+          "options": [
+            {
+              "label": "US",
+              "value": "com"
+            },
+            {
+              "label": "EU",
+              "value": "eu"
+            }
+          ]
+        }
+      }
+    },
+    "appLocation": {
+      "type": "admin",
+      "destination": "backend",
+      "default": "en_US",
+      "params": {
+        "label": "App/Shop Location",
+        "type": "text"
+      }
+    },
+    "pageTypes": {
+      "type": "admin",
+      "destination": "backend",
+      "default": ["PRODUCT", "HOMEPAGE"],
+      "params": {
+        "label": "Dynamic Yield Page Types",
+        "type": "json"
+      }
+    },
+    "campaignNames": {
+      "type": "admin",
+      "destination": "backend",
+      "default": ["Mobile-App-Recs"],
+      "params": {
+        "label": "Dynamic Yield Campaign Names",
+        "type": "json"
+      }
+    }
+  }
+}
