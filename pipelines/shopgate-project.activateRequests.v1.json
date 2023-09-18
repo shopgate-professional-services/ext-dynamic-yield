@@ -1,0 +1,26 @@
+{
+  "version": "1",
+  "pipeline": {
+    "id": "shopgate-project.activateRequests.v1",
+    "public": true,
+    "input": [
+      {"id": "10", "key": "requestActivation"}
+    ],
+    "output": [
+      {"id": "21", "key": "success"}
+    ],
+    "steps": [
+      {
+        "type": "extension",
+        "id": "@shopgate-project/dynamic-yield",
+        "path": "@shopgate-project/dynamic-yield/lib/setRequestActivation.js",
+        "input": [
+          {"id": "10", "key": "requestActivation"}
+        ],
+        "output": [
+          {"id": "21", "key": "success"}
+        ]
+      }
+    ]
+  }
+}

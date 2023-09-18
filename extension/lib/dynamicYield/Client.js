@@ -17,6 +17,7 @@ class Client {
     this.location = config.appLocation;
     this.campaigns = config.campaignNames;
     this.pageTypes = config.pageTypes;
+    this.sendRequests = config.sendRequests;
 
     this.deviceInfo = device.getInfo;
     this.storage = storage;
@@ -32,85 +33,90 @@ class Client {
    * @return {Array} productIds
    */
   async getChosenVariations(context, endpoint = 'serve/user/choose') {
-    let pageType = 'HOMEPAGE';
+    // test activation for this device only
+    const requestActivation = await this.storage.device.get('requestActivation');
 
-    // page is not in config page type list or no campaign names are configured
-    if (!this.pageTypes.includes(pageType) || !this.campaigns.length) {
-      this.log.error('Missing Dynamic Yield configuration');
-      return {
-        productIds: [],
+    if (this.sendRequests || requestActivation) {
+      let pageType = 'HOMEPAGE';
+
+      // page is not in config page type list or no campaign names are configured
+      if (!this.pageTypes.includes(pageType) || !this.campaigns.length) {
+        this.log.error('Missing Dynamic Yield configuration');
+        return {
+          productIds: [],
+        };
+      }
+
+      const itemSku = [];
+
+      if (context.type === 'product') {
+        pageType = 'PRODUCT';
+        itemSku.push(context.id);
+      }
+
+      // get session ids from storage
+      const dySession = await this.storage.device.get('dySession');
+      const dySessionId = dySession ? { dy: dySession.value } : {};
+
+      // body request
+      const bodyData = {
+        selector: {
+          names: this.campaigns,
+        },
+        user: {},
+        session: dySessionId,
+        context: {
+          page: {
+            type: pageType,
+            location: '/app',
+            locale: this.location,
+            data: itemSku,
+          },
+          device: {
+            ip: context.sgxsMeta.deviceIp,
+          },
+          store: {},
+        },
+        options: {
+          isImplicitPageview: false,
+          returnAnalyticsMetadata: false,
+        },
       };
-    }
 
-    const itemSku = [];
+      try {
+        const response = await this.request({ context }, bodyData, endpoint);
 
-    if (context.type === 'product') {
-      pageType = 'PRODUCT';
-      itemSku.push(context.id);
-    }
+        // save cookie data to storage
+        if (response.cookies) {
+          const dyCookieSession = response.cookies.find(c => c.name === '_dyjsession');
 
-    // get session ids from storage
-    const dySession = await this.storage.device.get('dySession');
-    const dySessionId = dySession ? { dy: dySession.value } : {};
-
-    // body request
-    const bodyData = {
-      selector: {
-        names: this.campaigns,
-      },
-      user: {},
-      session: dySessionId,
-      context: {
-        page: {
-          type: pageType,
-          location: '/app',
-          locale: this.location,
-          data: itemSku,
-        },
-        device: {
-          ip: context.sgxsMeta.deviceIp,
-        },
-        store: {},
-      },
-      options: {
-        isImplicitPageview: false,
-        returnAnalyticsMetadata: false,
-      },
-    };
-
-    try {
-      const response = await this.request({ context }, bodyData, endpoint);
-
-      // save cookie data to storage
-      if (response.cookies) {
-        const dyCookieSession = response.cookies.find(c => c.name === '_dyjsession');
-
-        this.storage.device.set('dySession', dyCookieSession.value)
-          .catch(e => this.log.warn(e, 'Unable to store Dynamic Yield Session Id'));
-      }
-
-      // campaign exists and has variations
-      if (response.choices && response.choices[0]?.variations) {
-        const dyChoices = response.choices[0];
-
-        if (dyChoices.variations[0]?.payload?.data) {
-          const { data } = dyChoices.variations[0].payload;
-          const productSkus = [];
-
-          // get SKUs from DY response
-          if (data.slots) {
-            data.slots.map(
-              slot => productSkus.push(slot.sku)
-            );
-          }
-
-          return {
-            productIds: productSkus,
-          };
+          this.storage.device.set('dySession', dyCookieSession.value)
+            .catch(e => this.log.warn(e, 'Unable to store Dynamic Yield Session Id'));
         }
+
+        // campaign exists and has variations
+        if (response.choices && response.choices.length && response.choices[0].variations) {
+          const dyChoices = response.choices[0];
+
+          if (dyChoices.variations.length && dyChoices.variations[0].payload.data) {
+            const { data } = dyChoices.variations[0].payload;
+            const productSkus = [];
+
+            // get SKUs from DY response
+            if (data.slots) {
+              data.slots.map(
+                slot => productSkus.push(slot.sku)
+              );
+            }
+
+            return {
+              productIds: productSkus,
+            };
+          }
+        }
+      } catch (e) {
+        this.log.error(e.stack, 'Dynamic Yield error');
       }
-    } catch (e) {
-      this.log.error(e.stack, 'Dynamic Yield error');
     }
 
     return {
