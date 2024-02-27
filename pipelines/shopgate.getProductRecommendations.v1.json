@@ -4,7 +4,7 @@
     "id": "shopgate.getProductRecommendations.v1",
     "public": true,
     "input": [
-      {"id": "1", "key": "id"},
+      {"id": "1", "key": "id", "optional": true},
       {"id": "2", "key": "type"},
       {"id": "750", "key": "sgxsMeta"}
     ],
@@ -14,7 +14,7 @@
         "id": "@shopgate-project/dynamic-yield",
         "path": "@shopgate-project/dynamic-yield/lib/getProductRecommendations.js",
         "input": [
-          {"id": "1", "key": "id"},
+          {"id": "1", "key": "id", "optional": true},
           {"id": "2", "key": "type"},
           {"id": "750", "key": "sgxsMeta"}
         ],
