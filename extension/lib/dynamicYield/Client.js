@@ -36,10 +36,18 @@ class Client {
     // activation for device only
     const requestActivation = await this.storage.device.get('requestActivation');
 
+    const campaignNames = context.requestOptions?.names;
+    const campaignPageType = context.requestOptions?.type;
+
     if (this.sendRequests || requestActivation) {
+      const itemSku = [];
       let pageType = 'HOMEPAGE';
 
-      const itemSku = [];
+      // overwrite campaigns and page type with request options
+      if (campaignNames && campaignPageType) {
+        this.campaigns = campaignNames;
+        pageType = campaignPageType;
+      }
 
       if (context.type === 'product') {
         pageType = 'PRODUCT';
