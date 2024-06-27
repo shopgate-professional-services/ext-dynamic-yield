@@ -45,8 +45,8 @@ class Client {
         pageType = 'OTHER';
       }
 
-      const campaignNames = context.requestOptions?.names;
-      const campaignPageType = context.requestOptions?.type;
+      const campaignNames = (context.requestOptions && context.requestOptions.names) || [];
+      const campaignPageType = (context.requestOptions && context.requestOptions.type) || '';
 
       // overwrite campaigns and page type with request options
       if (campaignNames && campaignPageType) {
