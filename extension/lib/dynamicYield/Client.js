@@ -36,12 +36,17 @@ class Client {
     // activation for device only
     const requestActivation = await this.storage.device.get('requestActivation');
 
-    const campaignNames = context.requestOptions?.names;
-    const campaignPageType = context.requestOptions?.type;
-
     if (this.sendRequests || requestActivation) {
       const itemSku = [];
       let pageType = 'HOMEPAGE';
+
+      // fallback to 'OTHER'
+      if (!this.pageTypes.includes(pageType)) {
+        pageType = 'OTHER';
+      }
+
+      const campaignNames = context.requestOptions?.names;
+      const campaignPageType = context.requestOptions?.type;
 
       // overwrite campaigns and page type with request options
       if (campaignNames && campaignPageType) {
@@ -49,13 +54,13 @@ class Client {
         pageType = campaignPageType;
       }
 
-      if (context.type === 'product') {
+      if (context.type === 'product' && this.pageTypes.includes('PRODUCT')) {
         pageType = 'PRODUCT';
         itemSku.push(context.id);
       }
 
-      // page is not in config page type list or no campaign names are configured
-      if (!this.pageTypes.includes(pageType) || !this.campaigns.length) {
+      // no campaign names are configured
+      if (!this.campaigns.length) {
         return {
           productIds: [],
         };
