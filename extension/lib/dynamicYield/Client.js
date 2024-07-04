@@ -27,12 +27,12 @@ class Client {
 
   /**
    * Get variations from Dynamic Yield
-   * @param {Object} context Context
+   * @param {Object} input Input
    * @param {string} endpoint Endpoint
    *
    * @return {Array} productIds
    */
-  async getChosenVariations(context, endpoint = 'serve/user/choose') {
+  async getChosenVariations(input, endpoint = 'serve/user/choose') {
     // activation for device only
     const requestActivation = await this.storage.device.get('requestActivation');
 
@@ -45,18 +45,18 @@ class Client {
         pageType = 'OTHER';
       }
 
-      const campaignNames = (context.requestOptions && context.requestOptions.names) || [];
-      const campaignPageType = (context.requestOptions && context.requestOptions.type) || '';
+      const campaignNames = (input.requestOptions && input.requestOptions.names) || [];
+      const campaignPageType = (input.requestOptions && input.requestOptions.type) || '';
 
       // overwrite campaigns and page type with request options
-      if (campaignNames && campaignPageType) {
+      if (campaignNames.length && campaignPageType) {
         this.campaigns = campaignNames;
         pageType = campaignPageType;
       }
 
-      if (context.type === 'product' && this.pageTypes.includes('PRODUCT')) {
+      if (input.type === 'product' && this.pageTypes.includes('PRODUCT')) {
         pageType = 'PRODUCT';
-        itemSku.push(context.id);
+        itemSku.push(input.id);
       }
 
       // no campaign names are configured
@@ -85,7 +85,7 @@ class Client {
             data: itemSku,
           },
           device: {
-            ip: context.sgxsMeta.deviceIp,
+            ip: input.sgxsMeta.deviceIp,
           },
           store: {},
         },
@@ -96,7 +96,7 @@ class Client {
       };
 
       try {
-        const response = await this.request({ context }, bodyData, endpoint);
+        const response = await this.request({ input }, bodyData, endpoint);
 
         // save cookie data to storage
         if (response.cookies) {
