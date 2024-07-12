@@ -21,7 +21,7 @@ The [@shopgate-project/product-recommendations](https://github.com/shopgate-prof
 
 If `sendRequests` is set to `false`, the user can activate the requests by touching the header/logo for at least 5 seconds.
 
-If the extension receives request options via extension `@shopgate-project/product-recommendations`, these options are given priority when processing the requests to Dynamic Yield.
+If the extension receives request options via extension `@shopgate-project/product-recommendations`, these options are given priority when processing the requests to Dynamic Yield. There you can set the page type to `HOMEPAGE`, `CATEGORY`, `PRODUCT`, `CART` and `OTHER`.
 
 **Example:**
 
