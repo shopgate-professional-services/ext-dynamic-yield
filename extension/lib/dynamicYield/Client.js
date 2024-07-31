@@ -27,12 +27,12 @@ class Client {
 
   /**
    * Get variations from Dynamic Yield
-   * @param {Object} input Input
+   * @param {Object} params Params
    * @param {string} endpoint Endpoint
    *
    * @return {Array} productIds
    */
-  async getChosenVariations(input, endpoint = 'serve/user/choose') {
+  async getChosenVariations(params, endpoint = 'serve/user/choose') {
     // activation for device only
     const requestActivation = await this.storage.device.get('requestActivation');
 
@@ -45,8 +45,8 @@ class Client {
         pageType = 'OTHER';
       }
 
-      const campaignNames = (input.requestOptions && input.requestOptions.names) || [];
-      const campaignPageType = (input.requestOptions && input.requestOptions.type) || '';
+      const campaignNames = (params.requestOptions && params.requestOptions.names) || [];
+      const campaignPageType = (params.requestOptions && params.requestOptions.type) || '';
 
       // overwrite campaigns and page type with request options
       if (campaignNames.length && campaignPageType) {
@@ -54,9 +54,9 @@ class Client {
         pageType = campaignPageType;
       }
 
-      if (input.type === 'product' && this.pageTypes.includes('PRODUCT')) {
+      if (params.type === 'product' && this.pageTypes.includes('PRODUCT')) {
         pageType = 'PRODUCT';
-        itemSku.push(input.id);
+        itemSku.push(params.id);
       }
 
       // no campaign names are configured
@@ -85,7 +85,7 @@ class Client {
             data: itemSku,
           },
           device: {
-            ip: input.sgxsMeta.deviceIp,
+            ip: params.sgxsMeta.deviceIp,
           },
           store: {},
         },
@@ -96,7 +96,7 @@ class Client {
       };
 
       try {
-        const response = await this.request({ input }, bodyData, endpoint);
+        const response = await this.request({ params }, bodyData, endpoint);
 
         // save cookie data to storage
         if (response.cookies) {
@@ -146,7 +146,6 @@ class Client {
     const response = await promisify(this.tracedRequest('Dynamic Yield'))({
       uri: this.baseUri + endpoint,
       method: 'POST',
-      qs: { ...params },
       headers: {
         'content-type': 'application/json',
         'dy-api-key': this.authKey,
