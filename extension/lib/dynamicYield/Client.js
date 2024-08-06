@@ -27,27 +27,40 @@ class Client {
 
   /**
    * Get variations from Dynamic Yield
-   * @param {Object} context Context
+   * @param {Object} input Input
    * @param {string} endpoint Endpoint
    *
    * @return {Array} productIds
    */
-  async getChosenVariations(context, endpoint = 'serve/user/choose') {
+  async getChosenVariations(input, endpoint = 'serve/user/choose') {
     // activation for device only
     const requestActivation = await this.storage.device.get('requestActivation');
 
     if (this.sendRequests || requestActivation) {
+      const itemSku = [];
       let pageType = 'HOMEPAGE';
 
-      const itemSku = [];
-
-      if (context.type === 'product') {
-        pageType = 'PRODUCT';
-        itemSku.push(context.id);
+      // fallback to 'OTHER'
+      if (!this.pageTypes.includes(pageType)) {
+        pageType = 'OTHER';
       }
 
-      // page is not in config page type list or no campaign names are configured
-      if (!this.pageTypes.includes(pageType) || !this.campaigns.length) {
+      const campaignNames = (input.requestOptions && input.requestOptions.names) || [];
+      const campaignPageType = (input.requestOptions && input.requestOptions.type) || '';
+
+      // overwrite campaigns and page type with request options
+      if (campaignNames.length && campaignPageType) {
+        this.campaigns = campaignNames;
+        pageType = campaignPageType;
+      }
+
+      if (input.type === 'product' && this.pageTypes.includes('PRODUCT')) {
+        pageType = 'PRODUCT';
+        itemSku.push(input.id);
+      }
+
+      // no campaign names are configured
+      if (!this.campaigns.length) {
         return {
           productIds: [],
         };
@@ -72,7 +85,7 @@ class Client {
             data: itemSku,
           },
           device: {
-            ip: context.sgxsMeta.deviceIp,
+            ip: input.sgxsMeta.deviceIp,
           },
           store: {},
         },
@@ -83,7 +96,7 @@ class Client {
       };
 
       try {
-        const response = await this.request({ context }, bodyData, endpoint);
+        const response = await this.request(bodyData, endpoint);
 
         // save cookie data to storage
         if (response.cookies) {
@@ -123,17 +136,15 @@ class Client {
 
   /**
    * Request to Dynamic Yield Experience API
-   * @param {Object} params params
    * @param {Object} bodyData body data
    * @param {string} endpoint endpoint
    *
    * @return {string}
    */
-  async request(params, bodyData, endpoint) {
+  async request(bodyData, endpoint) {
     const response = await promisify(this.tracedRequest('Dynamic Yield'))({
       uri: this.baseUri + endpoint,
       method: 'POST',
-      qs: { ...params },
       headers: {
         'content-type': 'application/json',
         'dy-api-key': this.authKey,
@@ -146,7 +157,7 @@ class Client {
       this.log.error(
         {
           body: response.body,
-          request: params,
+          request: JSON.stringify(bodyData, null, 2),
           endpoint,
         },
         `Dynamic Yield error code ${response.statusCode} in response`

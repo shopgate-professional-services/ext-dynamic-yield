@@ -6,6 +6,7 @@
     "input": [
       {"id": "1", "key": "id", "optional": true},
       {"id": "2", "key": "type"},
+      {"id": "3", "key": "requestOptions", "optional": true},
       {"id": "750", "key": "sgxsMeta"}
     ],
     "steps": [
@@ -16,6 +17,7 @@
         "input": [
           {"id": "1", "key": "id", "optional": true},
           {"id": "2", "key": "type"},
+          {"id": "3", "key": "requestOptions", "optional": true},
           {"id": "750", "key": "sgxsMeta"}
         ],
         "output" : [
